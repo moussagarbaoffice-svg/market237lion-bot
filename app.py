@@ -197,7 +197,7 @@ def webhook():
         
         message_data = data["data"]
         chat_id = message_data.get("from")
-[10/2/2026 10:44 PM] Blvck Lion: body = message_data.get("body", "")
+        body = message_data.get("body", "")
         sender_name = message_data.get("senderName", "Client")
         msg_type = message_data.get("type", "chat")
         
