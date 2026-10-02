@@ -3,7 +3,7 @@ import requests
 from flask import Flask, request, jsonify
 import google.generativeai as genai
 
-app = Flask(name)
+app = Flask(_name_)
 
 # ========== CONFIGURATION ==========
 ULTRAMSG_INSTANCE_ID = os.environ.get("ULTRAMSG_INSTANCE_ID")
