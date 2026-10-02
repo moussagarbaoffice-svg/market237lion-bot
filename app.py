@@ -6,7 +6,7 @@ from supabase import create_client, Client
 from datetime import datetime, timedelta
 import time
 
-app = Flask(name)
+app = Flask(__name__)
 
 # ========== CONFIGURATION ==========
 ULTRAMSG_INSTANCE_ID = os.environ.get("ULTRAMSG_INSTANCE_ID")
@@ -250,5 +250,5 @@ def webhook():
 def health():
     return jsonify({"status": "alive", "bot": "Market237Lion"}), 200
 
-if name == "main":
+if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
