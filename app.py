@@ -199,9 +199,6 @@ def webhook():
         
         message_data = data["data"]
         chat_id = message_data.get("from")
-        # Ignorer les messages de groupe
-if chat_id and chat_id.endswith("@g.us"):
-    return jsonify({"status": "ignored_group"}), 200
         body = message_data.get("body", "")
         sender_name = message_data.get("senderName", "Client")
         msg_type = message_data.get("type", "chat")
@@ -212,10 +209,6 @@ if chat_id and chat_id.endswith("@g.us"):
         # Anti-spam
         if is_rate_limited(chat_id):
             return jsonify({"status": "rate_limited"}), 200
-        
-        # Gestion des vocaux (transcription basique)
-        if msg_type == "ptt" or msg_type == "audio":
-            body = "[Message vocal reçu - en attente de traitement]"
         
         # Détection de transfert
         if needs_transfer(body):
@@ -250,7 +243,6 @@ if chat_id and chat_id.endswith("@g.us"):
     except Exception as e:
         print(f"Erreur webhook: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
-
 @app.route("/", methods=["GET"])
 def health():
     return jsonify({"status": "alive", "bot": "Market237Lion"}), 200
