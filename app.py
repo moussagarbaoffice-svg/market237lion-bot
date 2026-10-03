@@ -211,26 +211,24 @@ def webhook():
             prompt += f"{msg['role']}: {msg['content']}\n"
         prompt += f"\nClient : {body}\nAssistant :"
         
-        # Génération de la réponse
-        try:
-            response = client_ia.models.generate_content(
-                model="gemini-3.8-flash",
-                contents=prompt
-            )
-            ai_reply = response.text.strip()
-        except Exception as e:
-            print(f"Erreur IA: {e}")
+        # Génération de la réponse avec tentatives (retry)
+max_retries = 3
+ai_reply = ""
+for attempt in range(max_retries):
+    try:
+        response = client_ia.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt
+        )
+        ai_reply = response.text.strip()
+        break
+    except Exception as e:
+        print(f"Tentative {attempt + 1} echouee: {e}")
+        if attempt == max_retries - 1:
             ai_reply = "Je suis desole, je rencontre un petit souci technique. Je transmets votre message a M. Garba."
             notify_moussa(sender_name, chat_id, "Erreur technique", str(e), body)
-        
-        add_to_conversation(chat_id, "assistant", ai_reply, "Assistant")
-        send_whatsapp(chat_id, ai_reply)
-        
-        return jsonify({"status": "ok"}), 200
-    
-    except Exception as e:
-        print(f"Erreur webhook: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        else:
+            time.sleep(2)
         
 @app.route("/", methods=["GET"])
 def health():
