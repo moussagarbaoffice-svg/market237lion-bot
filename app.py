@@ -136,7 +136,9 @@ TRANSFER_KEYWORDS = [
 def needs_transfer(message):
     msg = message.lower()
     return any(keyword in msg for keyword in TRANSFER_KEYWORDS)
-    def send_whatsapp(to, body):
+
+
+def send_whatsapp(to, body):
     url = f"https://api.ultramsg.com/{ULTRAMSG_INSTANCE_ID}/messages/chat"
     payload = {"token": ULTRAMSG_TOKEN, "to": to, "body": body}
     try:
@@ -145,7 +147,6 @@ def needs_transfer(message):
     except Exception as e:
         print(f"Erreur envoi WhatsApp: {e}")
         return None
-
 def notify_moussa(client_name, client_number, products, objection, last_message):
     alert_text = (
         f"NOUVEAU TRANSFERT\n\n"
