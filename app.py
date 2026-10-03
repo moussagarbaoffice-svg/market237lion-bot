@@ -1,12 +1,11 @@
 import os
 import requests
 from flask import Flask, request, jsonify
-import google.generativeai as genai
+from google import genai
 from supabase import create_client, Client
-from datetime import datetime, timedelta
 import time
 
-app = Flask(__name__)
+app = Flask(name)
 
 # ========== CONFIGURATION ==========
 ULTRAMSG_INSTANCE_ID = os.environ.get("ULTRAMSG_INSTANCE_ID")
@@ -18,7 +17,7 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-genai.configure(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Supabase (base de données)
