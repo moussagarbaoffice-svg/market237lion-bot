@@ -172,63 +172,65 @@ def webhook():
         data = request.get_json()
         if not data or "data" not in data:
             return jsonify({"status": "ignored"}), 200
-        
+
         message_data = data["data"]
         chat_id = message_data.get("from")
         body = message_data.get("body", "")
         sender_name = message_data.get("senderName", "Client")
         msg_type = message_data.get("type", "chat")
-        
+
         if not chat_id or not body:
             return jsonify({"status": "ignored"}), 200
-        
-        # FILTRE : Ignorer les messages de groupe
+
         if chat_id.endswith("@g.us"):
             return jsonify({"status": "ignored_group"}), 200
-        
-        # FILTRE : Ignorer les médias
+
         if msg_type in ["image", "video", "document", "audio", "ptt", "sticker"]:
             return jsonify({"status": "ignored_media"}), 200
-        
-        # Anti-spam
+
         if is_rate_limited(chat_id):
             return jsonify({"status": "rate_limited"}), 200
-        
-        # Détection de transfert
+
         if needs_transfer(body):
-            send_whatsapp(chat_id, "Je transmets votre demande à M. Garba. Il vous répond dans quelques minutes. Merci de votre patience.")
+            send_whatsapp(chat_id, "Je transmets votre demande a M. Garba. Il vous repond dans quelques minutes. Merci de votre patience.")
             notify_moussa(sender_name, chat_id, "A preciser", "Negociation / Demande humaine", body)
             add_to_conversation(chat_id, "user", body, sender_name)
             return jsonify({"status": "transferred"}), 200
-        
-        # Sauvegarde du message
+
         add_to_conversation(chat_id, "user", body, sender_name)
         history = get_conversation(chat_id)
-        
-        # Construction du prompt
+
         prompt = SYSTEM_PROMPT + "\n\nHistorique de la conversation :\n"
         for msg in history[-10:]:
             prompt += f"{msg['role']}: {msg['content']}\n"
         prompt += f"\nClient : {body}\nAssistant :"
-        
-        # Génération de la réponse avec tentatives (retry)
-max_retries = 3
-ai_reply = ""
-for attempt in range(max_retries):
-    try:
-        response = client_ia.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt
-        )
-        ai_reply = response.text.strip()
-        break
+
+        max_retries = 3
+        ai_reply = ""
+        for attempt in range(max_retries):
+            try:
+                response = client_ia.models.generate_content(
+                    model="gemini-1.5-flash",
+                    contents=prompt
+                )
+                ai_reply = response.text.strip()
+                break
+            except Exception as e:
+                print(f"Tentative {attempt + 1} echouee: {e}")
+                if attempt == max_retries - 1:
+                    ai_reply = "Je suis desole, je rencontre un petit souci technique. Je transmets votre message a M. Garba."
+                    notify_moussa(sender_name, chat_id, "Erreur technique", str(e), body)
+                else:
+                    time.sleep(2)
+
+        add_to_conversation(chat_id, "assistant", ai_reply, "Assistant")
+        send_whatsapp(chat_id, ai_reply)
+
+        return jsonify({"status": "ok"}), 200
+
     except Exception as e:
-        print(f"Tentative {attempt + 1} echouee: {e}")
-        if attempt == max_retries - 1:
-            ai_reply = "Je suis desole, je rencontre un petit souci technique. Je transmets votre message a M. Garba."
-            notify_moussa(sender_name, chat_id, "Erreur technique", str(e), body)
-        else:
-            time.sleep(2)
+        print(f"Erreur webhook: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
         
 @app.route("/", methods=["GET"])
 def health():
