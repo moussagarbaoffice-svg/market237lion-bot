@@ -167,7 +167,7 @@ def notify_moussa(client_name, client_number, products, objection, last_message)
             print(f"Reponse Telegram: {response.text}")
         except Exception as e:
             print(f"Erreur Telegram: {e}")
-            @app.route("/webhook", methods=["POST"])
+      @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
         data = request.get_json()
