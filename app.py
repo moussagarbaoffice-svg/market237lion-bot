@@ -176,16 +176,17 @@ def notify_moussa(client_name, client_number, products, objection, last_message)
     )
     # WhatsApp
     send_whatsapp(MOUSSA_WHATSAPP, alert_text)
-    # Telegram
-    if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
-        try:
-            requests.post(
-                f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-                data={"chat_id": TELEGRAM_CHAT_ID, "text": alert_text},
-                timeout=10
-            )
-        except Exception as e:
-            print(f"Erreur Telegram: {e}")
+   # Telegram
+if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
+    try:
+        response = requests.post(
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+            data={"chat_id": TELEGRAM_CHAT_ID, "text": alert_text},
+            timeout=10
+        )
+        print(f"Réponse Telegram: {response.text}")
+    except Exception as e:
+        print(f"Erreur Telegram: {e}")
 
 # ========== WEBHOOK ==========
 @app.route("/webhook", methods=["POST"])
