@@ -166,6 +166,7 @@ def send_whatsapp(to, body):
 
 # ========== ALERTE MULTI-CANAUX ==========
 def notify_moussa(client_name, client_number, products, objection, last_message):
+    print(f"DEBUG - Token: {TELEGRAM_BOT_TOKEN}, Chat ID: {TELEGRAM_CHAT_ID}")
     alert_text = (
         f"🔔 NOUVEAU TRANSFERT\n\n"
         f"👤 Client : {client_name}\n"
@@ -188,7 +189,7 @@ def notify_moussa(client_name, client_number, products, objection, last_message)
         except Exception as e:
             print(f"Erreur Telegram: {e}")
 
-# ========== WEBHOOK ==========
+# ========== WEBHOOK ==========2q
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
