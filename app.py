@@ -115,7 +115,7 @@ def add_to_conversation(chat_id, role, message, sender_name="Client"):
     conversations_cache[chat_id].append({"role": role, "content": message})
     if len(conversations_cache[chat_id]) > 20:
         conversations_cache[chat_id] = conversations_cache[chat_id][-20:]
-        last_message_time = {}
+last_message_time = {}
 RATE_LIMIT_SECONDS = 2
 
 def is_rate_limited(chat_id):
@@ -136,8 +136,6 @@ TRANSFER_KEYWORDS = [
 def needs_transfer(message):
     msg = message.lower()
     return any(keyword in msg for keyword in TRANSFER_KEYWORDS)
-
-
 def send_whatsapp(to, body):
     url = f"https://api.ultramsg.com/{ULTRAMSG_INSTANCE_ID}/messages/chat"
     payload = {"token": ULTRAMSG_TOKEN, "to": to, "body": body}
@@ -147,6 +145,7 @@ def send_whatsapp(to, body):
     except Exception as e:
         print(f"Erreur envoi WhatsApp: {e}")
         return None
+
 def notify_moussa(client_name, client_number, products, objection, last_message):
     alert_text = (
         f"NOUVEAU TRANSFERT\n\n"
@@ -232,7 +231,8 @@ def webhook():
     except Exception as e:
         print(f"Erreur webhook: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
-        @app.route("/", methods=["GET"])
+        
+@app.route("/", methods=["GET"])
 def health():
     return jsonify({"status": "alive", "bot": "Market237Lion"}), 200
 
