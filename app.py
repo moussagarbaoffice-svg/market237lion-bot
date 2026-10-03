@@ -210,7 +210,7 @@ def webhook():
         for attempt in range(max_retries):
             try:
                 response = client_ia.models.generate_content(
-                    model="gemini-1.5-flash",
+                    model="gemini-3.8-flash",
                     contents=prompt
                 )
                 ai_reply = response.text.strip()
