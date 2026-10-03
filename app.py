@@ -17,13 +17,9 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+client_ia = genai.Client(api_key=GEMINI_API_KEY)
 
-# Supabase (base de données)
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL else None
-
-# ========== PROMPT SYSTÈME ==========
 SYSTEM_PROMPT = """
 Tu es l'Assistant de Moussa Garba, le bras droit numérique de Moussa Garba, propriétaire de la boutique "Chez Moussa Garba" / "Market237Lion".
 
@@ -36,26 +32,20 @@ Tu es l'Assistant de Moussa Garba, le bras droit numérique de Moussa Garba, pro
 ### ACTIVITÉ
 - Nom commercial : Chez Moussa Garba / Market237Lion
 - Produits : Vêtements, accessoires, gamme cosmétique, électronique, etc.
-- Arguments de vente : Bons articles, bons prix, bonne qualité, prix de gros, livraison, achats en ligne, partenaires et fournisseurs honnêtes.
+- Arguments de vente : Bons articles, bons prix, bonne qualité, prix de gros, livraison.
 
 ### PRIX MINIMUMS ABSOLUS (À NE JAMAIS FRANCHIR)
-Voici le seuil de rentabilité. Tu ne dois JAMAIS proposer un prix inférieur à ces montants, même lors d'une négociation. Si un client insiste pour un prix plus bas, tu passes le relais à Moussa.
-
 - Sacs à main : minimum 8 000 FCFA
 - Accessoires téléphone : minimum 1 500 FCFA
 - Cosmétiques : minimum 2 500 FCFA
 - Électronique : minimum 5 000 FCFA
 
-### CATALOGUE ET PRIX
-Tu te bases sur ta connaissance du marché et les données fournies par Moussa (conversations, images). Tu peux justifier la valeur d'un produit (qualité, rareté, utilité), mais tu ne descends JAMAIS en dessous des prix minimums. En cas de doute, tu passes le relais.
-
 ### OBJECTIFS
 1. Répondre aux questions des clients avec précision et courtoisie.
-2. Qualifier discrètement le client sans l'interroger comme un interrogatoire.
+2. Qualifier discrètement le client sans l'interroger.
 3. Prendre les commandes et notifier Moussa immédiatement.
-4. Relancer les paniers abandonnés avec tact, sans harceler.
+4. Relancer les paniers abandonnés avec tact.
 5. Susciter l'intérêt et la curiosité du client sans l'irriter.
-6. Recommander des produits complémentaires (cross-sell) quand c'est pertinent.
 
 ### RÈGLES ABSOLUES
 - Ne jamais inventer un prix. Si tu n'es pas sûr, dis : "Je vérifie auprès de M. Garba."
@@ -63,7 +53,6 @@ Tu te bases sur ta connaissance du marché et les données fournies par Moussa (
 - Ne jamais promettre une livraison impossible.
 - Ne jamais insulter, ni manquer de respect.
 - Ne jamais forcer un achat.
-- Ne jamais poser de questions personnelles inutiles.
 
 ### NÉGOCIATION
 - Tu n'accordes JAMAIS de remise toi-même.
@@ -83,7 +72,8 @@ Tu te bases sur ta connaissance du marché et les données fournies par Moussa (
 1. Tu dis : "Je transmets votre demande à M. Garba. Il vous répond dans quelques minutes. Merci de votre patience."
 2. Tu arrêtes de répondre.
 3. Tu envoies immédiatement une alerte à Moussa.
-[10/2/2026 10:44 PM] Blvck Lion: ### ALERTE À MOUSSA (résumé à envoyer)
+
+### ALERTE À MOUSSA (résumé à envoyer)
 - Nom du client
 - Numéro de téléphone
 - Produits discutés
@@ -97,8 +87,6 @@ Tu te bases sur ta connaissance du marché et les données fournies par Moussa (
 - Rassurant, jamais pressant.
 - Termine par une question ouverte.
 """
-
-# ========== MÉMOIRE (SUPABASE + FALLBACK) ==========
 conversations_cache = {}
 
 def get_conversation(chat_id):
@@ -127,9 +115,7 @@ def add_to_conversation(chat_id, role, message, sender_name="Client"):
     conversations_cache[chat_id].append({"role": role, "content": message})
     if len(conversations_cache[chat_id]) > 20:
         conversations_cache[chat_id] = conversations_cache[chat_id][-20:]
-
-# ========== PROTECTION ANTI-SPAM ==========
-last_message_time = {}
+        last_message_time = {}
 RATE_LIMIT_SECONDS = 2
 
 def is_rate_limited(chat_id):
@@ -140,7 +126,6 @@ def is_rate_limited(chat_id):
     last_message_time[chat_id] = now
     return False
 
-# ========== DÉTECTION DE TRANSFERT ==========
 TRANSFER_KEYWORDS = [
     "humain", "gérant", "responsable", "patron", "moussa",
     "trop cher", "négocier", "remise", "réduction",
@@ -151,9 +136,7 @@ TRANSFER_KEYWORDS = [
 def needs_transfer(message):
     msg = message.lower()
     return any(keyword in msg for keyword in TRANSFER_KEYWORDS)
-
-# ========== ENVOI WHATSAPP ==========
-def send_whatsapp(to, body):
+    def send_whatsapp(to, body):
     url = f"https://api.ultramsg.com/{ULTRAMSG_INSTANCE_ID}/messages/chat"
     payload = {"token": ULTRAMSG_TOKEN, "to": to, "body": body}
     try:
@@ -163,20 +146,16 @@ def send_whatsapp(to, body):
         print(f"Erreur envoi WhatsApp: {e}")
         return None
 
-# ========== ALERTE MULTI-CANAUX ==========
 def notify_moussa(client_name, client_number, products, objection, last_message):
-    print(f"DEBUG - Token: {TELEGRAM_BOT_TOKEN}, Chat ID: {TELEGRAM_CHAT_ID}")
     alert_text = (
-        f"🔔 NOUVEAU TRANSFERT\n\n"
-        f"👤 Client : {client_name}\n"
-        f"📞 Numéro : {client_number}\n"
-        f"🛍️ Produits : {products}\n"
-        f"⚠️ Objection : {objection}\n"
-        f"💬 Dernier message : {last_message}"
+        f"NOUVEAU TRANSFERT\n\n"
+        f"Client : {client_name}\n"
+        f"Numero : {client_number}\n"
+        f"Produits : {products}\n"
+        f"Objection : {objection}\n"
+        f"Dernier message : {last_message}"
     )
-    # WhatsApp
     send_whatsapp(MOUSSA_WHATSAPP, alert_text)
-    # Telegram
     if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
         try:
             response = requests.post(
@@ -184,12 +163,10 @@ def notify_moussa(client_name, client_number, products, objection, last_message)
                 data={"chat_id": TELEGRAM_CHAT_ID, "text": alert_text},
                 timeout=10
             )
-            print(f"Réponse Telegram: {response.text}")
+            print(f"Reponse Telegram: {response.text}")
         except Exception as e:
             print(f"Erreur Telegram: {e}")
-
-# ========== WEBHOOK ==========2q
-@app.route("/webhook", methods=["POST"])
+            @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
         data = request.get_json()
@@ -205,6 +182,14 @@ def webhook():
         if not chat_id or not body:
             return jsonify({"status": "ignored"}), 200
         
+        # FILTRE : Ignorer les messages de groupe
+        if chat_id.endswith("@g.us"):
+            return jsonify({"status": "ignored_group"}), 200
+        
+        # FILTRE : Ignorer les médias
+        if msg_type in ["image", "video", "document", "audio", "ptt", "sticker"]:
+            return jsonify({"status": "ignored_media"}), 200
+        
         # Anti-spam
         if is_rate_limited(chat_id):
             return jsonify({"status": "rate_limited"}), 200
@@ -212,7 +197,7 @@ def webhook():
         # Détection de transfert
         if needs_transfer(body):
             send_whatsapp(chat_id, "Je transmets votre demande à M. Garba. Il vous répond dans quelques minutes. Merci de votre patience.")
-            notify_moussa(sender_name, chat_id, "À préciser", "Négociation / Demande humaine", body)
+            notify_moussa(sender_name, chat_id, "A preciser", "Negociation / Demande humaine", body)
             add_to_conversation(chat_id, "user", body, sender_name)
             return jsonify({"status": "transferred"}), 200
         
@@ -228,10 +213,14 @@ def webhook():
         
         # Génération de la réponse
         try:
-            response = model.generate_content(prompt)
+            response = client_ia.models.generate_content(
+                model="gemini-3.8-flash",
+                contents=prompt
+            )
             ai_reply = response.text.strip()
         except Exception as e:
-            ai_reply = "Je suis désolé, je rencontre un petit souci technique. Je transmets votre message à M. Garba."
+            print(f"Erreur IA: {e}")
+            ai_reply = "Je suis desole, je rencontre un petit souci technique. Je transmets votre message a M. Garba."
             notify_moussa(sender_name, chat_id, "Erreur technique", str(e), body)
         
         add_to_conversation(chat_id, "assistant", ai_reply, "Assistant")
@@ -242,7 +231,7 @@ def webhook():
     except Exception as e:
         print(f"Erreur webhook: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
-@app.route("/", methods=["GET"])
+        @app.route("/", methods=["GET"])
 def health():
     return jsonify({"status": "alive", "bot": "Market237Lion"}), 200
 
