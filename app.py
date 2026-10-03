@@ -199,6 +199,9 @@ def webhook():
         
         message_data = data["data"]
         chat_id = message_data.get("from")
+        # Ignorer les messages de groupe
+if chat_id and chat_id.endswith("@g.us"):
+    return jsonify({"status": "ignored_group"}), 200
         body = message_data.get("body", "")
         sender_name = message_data.get("senderName", "Client")
         msg_type = message_data.get("type", "chat")
