@@ -5,7 +5,7 @@ from google import genai
 from supabase import create_client, Client
 import time
 
-app = Flask(name)
+app = Flask("app")
 
 # ========== CONFIGURATION ==========
 ULTRAMSG_INSTANCE_ID = os.environ.get("ULTRAMSG_INSTANCE_ID")
@@ -246,5 +246,5 @@ def webhook():
 def health():
     return jsonify({"status": "alive", "bot": "Market237Lion"}), 200
 
-if __name__ == "__main__":
+if "app" == "app":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
